@@ -1,9 +1,7 @@
 package co.com.pgvl.data.dao.impl.sql.sqlserver;
 
-//import java.lang.reflect.Array;
+
 import java.sql.Connection;
-//import java.sql.PreparedStatement;
-//import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,8 +21,6 @@ final class ClienteSqlServerDAO extends SqlDAO implements ClienteDAO {
 		super(connection);
 	}
 
-	//private static final String FIND_BY_ID_QUERY = "SELECT id, name FROM Country WHERE id = ?";
-
     @Override
     public ClienteEntity findById(final UUID id) {
     	var countryEntityFilter = new ClienteEntity();
@@ -33,37 +29,6 @@ final class ClienteSqlServerDAO extends SqlDAO implements ClienteDAO {
     	var result = findByFilter(countryEntityFilter);
     	
     	return (result.isEmpty()) ? new ClienteEntity() : result.get(0);
-        /*CountryEntity country = null;
-
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(FIND_BY_ID_QUERY)) {
-
-            statement.setString(1, id.toString());
-
-            
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    country = mapResultSetToCountryEntity(resultSet);
-                }
-            }
-
-        } catch (SQLException e) {
-            logError(e, id); 
-            throw new RuntimeException("Error al buscar el país con id: " + id, e);
-        }
-
-        return country;
-    }
-
-    private CountryEntity mapResultSetToCountryEntity(ResultSet resultSet) throws SQLException {
-        return new CountryEntity(
-        );
-    }
-
- 
-    private void logError(SQLException e, UUID id) {
-        System.err.println("Error al consultar el país con id: " + id);
-        e.printStackTrace();*/
     }
 
 	@Override
@@ -102,11 +67,11 @@ final class ClienteSqlServerDAO extends SqlDAO implements ClienteDAO {
 			}
 			
 		} catch (final SQLException exception) {
-			var userMessage = "Se ha presentado un problema tratando de llevar a cabo la consulta de los paises por el filtro deseado, por favor intente de nuevo y si el problema persiste reporte la novedad";
-			var technicalMessage = "Se ha presentado un problema al tratar de consultar la infomracion de los paises por el filtro deseado en la base de datos sql server tratando de preparar la sentencia sql que se iba a ejecutar, por favor valide el log de errores para encontrar mayores detalles del problema presentado";
+			var userMessage = "Se ha presentado un problema tratando de llevar a cabo la consulta de los clientes por el filtro deseado, por favor intente de nuevo y si el problema persiste reporte la novedad";
+			var technicalMessage = "Se ha presentado un problema al tratar de consultar la informacion de los clientes por el filtro deseado en la base de datos sql server tratando de preparar la sentencia sql que se iba a ejecutar, por favor valide el log de errores para encontrar mayores detalles del problema presentado";
 
 			if(statementWasPrepared) {
-				technicalMessage = "Se ha presentado un problema al tratar de consultar la infomracion de los paises por el filtro deseado en la base de datos sql server tratando de ejecutar la sentencia sql definida, por favor valide el log de errores para encontrar mayores detalles del problema presentado";
+				technicalMessage = "Se ha presentado un problema al tratar de consultar la infomracion de los clientes por el filtro deseado en la base de datos sql server tratando de ejecutar la sentencia sql definida, por favor valide el log de errores para encontrar mayores detalles del problema presentado";
 			}
 			
 			throw DataPGVLException.crear(userMessage, technicalMessage, exception);
@@ -120,7 +85,7 @@ final class ClienteSqlServerDAO extends SqlDAO implements ClienteDAO {
 	}
 	
 	private void createFrom(StringBuilder statement) {
-		statement.append("FROM Country");
+		statement.append("FROM Cliente");
 	}
 	
 	private void createWhere(StringBuilder statement, final ClienteEntity filter, final List<Object> parameters) {
@@ -141,5 +106,57 @@ final class ClienteSqlServerDAO extends SqlDAO implements ClienteDAO {
 	private void createOrderBy(StringBuilder statement) {
 		statement.append("ORDER BY name ASC");
 	}
+
+	@Override
+	public void create(ClienteEntity data) {
+	    final var statement = new StringBuilder();
+	    statement.append("INSERT INTO Cliente (id, name) VALUES (?, ?)");
+
+	    try (final var preparedStatement = getConnection().prepareStatement(statement.toString())) {
+	        preparedStatement.setObject(1, UUIDHelper.getDefault());
+	        preparedStatement.setString(2, TextHelper.getDefault(data.getNombre()));
+
+	        preparedStatement.executeUpdate();
+	    } catch (final SQLException exception) {
+	        var userMessage = "Se ha presentado un problema al intentar registrar un nuevo cliente. Por favor intente de nuevo.";
+	        var technicalMessage = "Error al ejecutar el INSERT en la tabla Cliente en la base de datos SQL Server.";
+	        throw DataPGVLException.crear(userMessage, technicalMessage, exception);
+	    }
+	}
+
+	@Override
+	public void update(ClienteEntity data) {
+	    final var statement = new StringBuilder();
+	    statement.append("UPDATE Cliente SET name = ? WHERE id = ?");
+
+	    try (final var preparedStatement = getConnection().prepareStatement(statement.toString())) {
+	        preparedStatement.setString(1, TextHelper.getDefault(data.getNombre()));
+	        preparedStatement.setObject(2, data.getId());
+
+	        preparedStatement.executeUpdate();
+	    } catch (final SQLException exception) {
+	        var userMessage = "Se ha presentado un problema al intentar actualizar el cliente. Por favor intente de nuevo.";
+	        var technicalMessage = "Error al ejecutar el UPDATE en la tabla Cliente en la base de datos SQL Server.";
+	        throw DataPGVLException.crear(userMessage, technicalMessage, exception);
+	    }
+	}
+
+	@Override
+	public void delete(UUID id) {
+	    final var statement = new StringBuilder();
+	    statement.append("DELETE FROM Cliente WHERE id = ?");
+
+	    try (final var preparedStatement = getConnection().prepareStatement(statement.toString())) {
+	        preparedStatement.setObject(1, id);
+
+	        preparedStatement.executeUpdate();
+	    } catch (final SQLException exception) {
+	        var userMessage = "Se ha presentado un problema al intentar eliminar el cliente. Por favor intente de nuevo.";
+	        var technicalMessage = "Error al ejecutar el DELETE en la tabla Cliente en la base de datos SQL Server.";
+	        throw DataPGVLException.crear(userMessage, technicalMessage, exception);
+	    }
+	}
+
+
 }
 
