@@ -37,4 +37,8 @@ public final class UUIDHelper {
 	public static final boolean isDefault(final String uuidAsString) {
 		return getDefault(convertToUUID(uuidAsString), getDefault()).equals(getDefault());
 	}
+	
+	public static final boolean isEqual(final UUID valueOne, final UUID valueTwo) {
+		return getDefault(valueOne, getDefault()).compareTo(getDefault(valueTwo, getDefault())) == 0;
+	}
 }
