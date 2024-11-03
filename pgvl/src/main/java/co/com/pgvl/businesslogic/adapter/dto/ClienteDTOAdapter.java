@@ -15,7 +15,7 @@ public final class ClienteDTOAdapter implements Adapter<ClienteDomain, ClienteDT
 		
 	}
 	
-	public static Adapter<ClienteDomain, ClienteDTO> getCountryDTOAdapter(){
+	public static Adapter<ClienteDomain, ClienteDTO> getClienteDTOAdapter(){
 		return instance;
 	}
 

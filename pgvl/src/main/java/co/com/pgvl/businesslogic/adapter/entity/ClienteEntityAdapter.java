@@ -15,7 +15,7 @@ public class ClienteEntityAdapter implements Adapter<ClienteDomain, ClienteEntit
 		
 	}
 	
-	public static Adapter<ClienteDomain, ClienteEntity> getCountryEntityAdapter(){
+	public static Adapter<ClienteDomain, ClienteEntity> getClienteEntityAdapter(){
 		return instance;
 	}
 

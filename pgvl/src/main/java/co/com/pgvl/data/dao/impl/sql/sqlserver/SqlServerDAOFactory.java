@@ -49,8 +49,9 @@ public final class SqlServerDAOFactory extends DAOFactory {
 	}
 
 	@Override
-	public ClienteDAO getCountryDAO() {
-		return new ClienteSqlServerDAO(connection);
+	public ClienteDAO getClienteDAO() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

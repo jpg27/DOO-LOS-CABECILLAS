@@ -18,6 +18,6 @@ public abstract class DAOFactory {
 	
 	public abstract void closeConnection();
 	
-	public abstract ClienteDAO getCountryDAO();
+	public abstract ClienteDAO getClienteDAO();
 
 }
