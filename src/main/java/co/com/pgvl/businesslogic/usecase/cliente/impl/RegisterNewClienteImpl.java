@@ -4,8 +4,22 @@ import java.util.UUID;
 
 import co.com.pgvl.businesslogic.adapter.entity.ClienteEntityAdapter;
 import co.com.pgvl.businesslogic.usecase.cliente.RegisterNewCliente;
-import co.com.pgvl.businesslogic.usecase.cliente.rules.ClienteNameConsistencyIsValid;
-import co.com.pgvl.businesslogic.usecase.cliente.rules.impl.ClienteNameConsistencyIsValidImpl;
+import co.com.pgvl.businesslogic.usecase.cliente.rules.NombreClienteConsistencyIsValid;
+import co.com.pgvl.businesslogic.usecase.cliente.rules.ClienteDoesNotExist;
+import co.com.pgvl.businesslogic.usecase.cliente.rules.CorreoClienteConsistencyIsValid;
+import co.com.pgvl.businesslogic.usecase.cliente.rules.CorreoClienteIsUnique;
+import co.com.pgvl.businesslogic.usecase.cliente.rules.DireccionClienteConsistencyIsValid;
+import co.com.pgvl.businesslogic.usecase.cliente.rules.NumeroCelularClienteConsistencyIsValid;
+import co.com.pgvl.businesslogic.usecase.cliente.rules.NumeroDocumentoClienteConsistencyIsValid;
+import co.com.pgvl.businesslogic.usecase.cliente.rules.TipoDocumentoClienteConsistencyIsValid;
+import co.com.pgvl.businesslogic.usecase.cliente.rules.impl.NombreClienteConsistencyIsValidImpl;
+import co.com.pgvl.businesslogic.usecase.cliente.rules.impl.ClienteDoesNotExistImpl;
+import co.com.pgvl.businesslogic.usecase.cliente.rules.impl.CorreoClienteConsistencyIsValidImpl;
+import co.com.pgvl.businesslogic.usecase.cliente.rules.impl.CorreoClienteIsUniqueImpl;
+import co.com.pgvl.businesslogic.usecase.cliente.rules.impl.DireccionClienteConsistencyIsValidImpl;
+import co.com.pgvl.businesslogic.usecase.cliente.rules.impl.NumeroCelularClienteConsistencyIsValidImpl;
+import co.com.pgvl.businesslogic.usecase.cliente.rules.impl.NumeroDocumentoClienteConsistencyIsValidImpl;
+import co.com.pgvl.businesslogic.usecase.cliente.rules.impl.TipoDocumentoClienteConsistencyIsValidImpl;
 import co.com.pgvl.crosscutting.exceptions.BusinessLogicPGVLException;
 import co.com.pgvl.crosscutting.helpers.ObjectHelper;
 import co.com.pgvl.crosscutting.helpers.UUIDHelper;
@@ -15,15 +29,40 @@ import co.com.pgvl.domain.ClienteDomain;
 public class RegisterNewClienteImpl implements RegisterNewCliente {
 	
 	private DAOFactory daoFactory;
-	private ClienteNameConsistencyIsValid clienteNameConsistencyIsValid = new ClienteNameConsistencyIsValidImpl();
+	private NombreClienteConsistencyIsValid nombreClienteConsistencyIsValid = new NombreClienteConsistencyIsValidImpl();
+	private NumeroDocumentoClienteConsistencyIsValid numeroDocumentoClienteConsistencyIsValid = new NumeroDocumentoClienteConsistencyIsValidImpl();
+	private TipoDocumentoClienteConsistencyIsValid tipoDocumentoClienteConsistencyIsValid = new TipoDocumentoClienteConsistencyIsValidImpl();
+	private CorreoClienteConsistencyIsValid correoClienteConsistencyIsValid =  new CorreoClienteConsistencyIsValidImpl();
+	private NumeroCelularClienteConsistencyIsValid numeroCelularClienteConsistencyIsValid = new NumeroCelularClienteConsistencyIsValidImpl();
+	private DireccionClienteConsistencyIsValid direccionClienteConsistencyIsValid = new DireccionClienteConsistencyIsValidImpl();
+	private ClienteDoesNotExist clienteDoesNotExist;
+	private CorreoClienteIsUnique correoClienteIsUnique = new CorreoClienteIsUniqueImpl();
 	public RegisterNewClienteImpl(final DAOFactory daoFactory) {
 		setDaoFactory(daoFactory);
+		
+		this.clienteDoesNotExist = new ClienteDoesNotExistImpl();
 	}
 
 	@Override
 	public void execute(final ClienteDomain data) {
 		//validar politicas
-		clienteNameConsistencyIsValid.execute(data.getNombre());
+		//validacion de datos
+		nombreClienteConsistencyIsValid.execute(data.getNombre());
+		numeroDocumentoClienteConsistencyIsValid.execute(data.getNumeroDocumento());
+		numeroDocumentoClienteConsistencyIsValid.execute(data.getNumeroLicencia());
+		tipoDocumentoClienteConsistencyIsValid.execute(data.getTipoDocumento());
+		correoClienteConsistencyIsValid.execute(data.getCorreo());
+		numeroCelularClienteConsistencyIsValid.execute(data.getCelular());
+		direccionClienteConsistencyIsValid.execute(data.getDireccion());
+		
+		//si el ya existe
+		clienteDoesNotExist.execute(data.getId().toString(), daoFactory);
+		
+		//el correo del cliente no puede ser igual al de uno ya registrado
+		correoClienteIsUnique.execute(data.getCorreo(), daoFactory);
+		
+		
+		
 		
 		var clienteDomainToMap = ClienteDomain.create(generateId(), data.getNombre(), data.getNumeroDocumento(), data.getNumeroLicencia(), data.getTipoDocumento(), data.getCorreo(), data.getCelular(), data.getDireccion());
 		var clienteEntity = ClienteEntityAdapter.getClienteEntityAdapter().adaptTarget(clienteDomainToMap);

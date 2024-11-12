@@ -23,10 +23,10 @@ final class ClienteSqlServerDAO extends SqlDAO implements ClienteDAO {
 
     @Override
     public ClienteEntity findById(final UUID id) {
-    	var countryEntityFilter = new ClienteEntity();
-    	countryEntityFilter.setId(id);
+    	var clienteEntityFilter = new ClienteEntity();
+    	clienteEntityFilter.setId(id);
     	
-    	var result = findByFilter(countryEntityFilter);
+    	var result = findByFilter(clienteEntityFilter);
     	
     	return (result.isEmpty()) ? new ClienteEntity() : result.get(0);
     }
@@ -38,83 +38,116 @@ final class ClienteSqlServerDAO extends SqlDAO implements ClienteDAO {
 
 	@Override
 	public List<ClienteEntity> findByFilter(final ClienteEntity filter) {
-		final var statement = new StringBuilder();
-		final var parameters = new ArrayList<>();
-		final var resultSelect = new ArrayList<ClienteEntity>();
-		var statementWasPrepared = false;
-
-		createSelect(statement);
-		createFrom(statement);
-		createWhere(statement, filter, parameters);
-		createOrderBy(statement);
-		
-		try (final var preparedStatement = getConnection().prepareStatement(statement.toString())){
-			
-			for (var arrayIndex = 0; arrayIndex < parameters.size(); arrayIndex++) {
-				var statementIndex = arrayIndex + 1;
-				preparedStatement.setObject(statementIndex, parameters.get(arrayIndex));
-			}
-			statementWasPrepared = true;
-			
-			final var result = preparedStatement.executeQuery();
-				
-			while(result.next()) {
-				var countryEntityTmp = new ClienteEntity();
-				countryEntityTmp.setId(UUIDHelper.convertToUUID(result.getString("id")));
-				countryEntityTmp.setNombre(result.getString("name"));
-					
-				resultSelect.add(countryEntityTmp);
-			}
-			
-		} catch (final SQLException exception) {
-			var userMessage = "Se ha presentado un problema tratando de llevar a cabo la consulta de los clientes por el filtro deseado, por favor intente de nuevo y si el problema persiste reporte la novedad";
-			var technicalMessage = "Se ha presentado un problema al tratar de consultar la informacion de los clientes por el filtro deseado en la base de datos sql server tratando de preparar la sentencia sql que se iba a ejecutar, por favor valide el log de errores para encontrar mayores detalles del problema presentado";
-
-			if(statementWasPrepared) {
-				technicalMessage = "Se ha presentado un problema al tratar de consultar la infomracion de los clientes por el filtro deseado en la base de datos sql server tratando de ejecutar la sentencia sql definida, por favor valide el log de errores para encontrar mayores detalles del problema presentado";
-			}
-			
-			throw DataPGVLException.crear(userMessage, technicalMessage, exception);
-		}
-		
-		return resultSelect;
+	    final var statement = new StringBuilder();
+	    final var parameters = new ArrayList<>();
+	    final var resultSelect = new ArrayList<ClienteEntity>();
+	    
+	    createSelect(statement);
+	    createFrom(statement);
+	    createWhere(statement, filter, parameters);
+	    createOrderBy(statement);
+	    
+	    try (final var preparedStatement = getConnection().prepareStatement(statement.toString())) {
+	        for (var arrayIndex = 0; arrayIndex < parameters.size(); arrayIndex++) {
+	            preparedStatement.setObject(arrayIndex + 1, parameters.get(arrayIndex));
+	        }
+	        
+	        final var result = preparedStatement.executeQuery();
+	        
+	        while(result.next()) {
+	            var clienteEntityTmp = new ClienteEntity();
+	            clienteEntityTmp.setId(UUIDHelper.convertToUUID(result.getString("id")));
+	            clienteEntityTmp.setNombre(result.getString("nombre"));
+	            clienteEntityTmp.setNumeroDocumento(result.getString("numero_documento"));
+	            clienteEntityTmp.setNumeroLicencia(result.getString("numero_licencia"));
+	            clienteEntityTmp.setTipoDocumento(result.getString("tipo_documento"));
+	            clienteEntityTmp.setCorreo(result.getString("correo"));
+	            clienteEntityTmp.setCelular(result.getString("celular"));
+	            clienteEntityTmp.setDireccion(result.getString("direccion"));
+	            
+	            resultSelect.add(clienteEntityTmp);
+	        }
+	        
+	    } catch (final SQLException exception) {
+	        var userMessage = "Se ha presentado un problema tratando de llevar a cabo la consulta de los clientes por el filtro deseado, por favor intente de nuevo y si el problema persiste reporte la novedad";
+	        var technicalMessage = "Error al ejecutar la consulta SQL en PostgreSQL. Sentencia: " + statement.toString();
+	        
+	        throw DataPGVLException.crear(userMessage, technicalMessage, exception);
+	    }
+	    
+	    return resultSelect;
 	}
+
 	
 	private void createSelect(StringBuilder statement) {
-		statement.append("SELECT id, name ");
+		statement.append("SELECT id, nombre, numero_documento, numero_licencia, tipo_documento, correo, celular, direccion ");
 	}
 	
 	private void createFrom(StringBuilder statement) {
-		statement.append("FROM Cliente");
+		statement.append("FROM Usuarios");
 	}
 	
 	private void createWhere(StringBuilder statement, final ClienteEntity filter, final List<Object> parameters) {
-		if(!ObjectHelper.isNull(filter)) {
-			if(!UUIDHelper.isDefault(filter.getId())) {
-				statement.append("WHERE id = ? ");
-				parameters.add(filter.getId());
-			}
-			if(!TextHelper.isEmptyApplyingTrim(filter.getNombre())) {
-				statement.append((parameters.isEmpty()) ? "WHERE " : "AND ");
-				statement.append("name = ? ");
-				parameters.add(filter.getNombre());
-			}
-		}
-		
+	    boolean hasConditions = false;
+
+	    if (!ObjectHelper.isNull(filter)) {
+	        if (!UUIDHelper.isDefault(filter.getId())) {
+	            statement.append("WHERE id = ? ");
+	            parameters.add(filter.getId());
+	            hasConditions = true;
+	        }
+	        if (!TextHelper.isEmptyApplyingTrim(filter.getNombre())) {
+	            statement.append(hasConditions ? "AND " : "WHERE ");
+	            statement.append("nombre = ? ");
+	            parameters.add(filter.getNombre());
+	            hasConditions = true;
+	        }
+	        if (!TextHelper.isEmptyApplyingTrim(filter.getNumeroDocumento())) {
+	            statement.append(hasConditions ? "AND " : "WHERE ");
+	            statement.append("numero_documento = ? ");
+	            parameters.add(filter.getNumeroDocumento());
+	            hasConditions = true;
+	        }
+	        if (!TextHelper.isEmptyApplyingTrim(filter.getNumeroLicencia())) {
+	            statement.append(hasConditions ? "AND " : "WHERE ");
+	            statement.append("numero_licencia = ? ");
+	            parameters.add(filter.getNumeroLicencia());
+	            hasConditions = true;
+	        }
+	        if (!TextHelper.isEmptyApplyingTrim(filter.getCorreo())) {
+	            statement.append(hasConditions ? "AND " : "WHERE ");
+	            statement.append("correo = ? ");
+	            parameters.add(filter.getCorreo());
+	            hasConditions = true;
+	        }
+	        if (!TextHelper.isEmptyApplyingTrim(filter.getCelular())) {
+	            statement.append(hasConditions ? "AND " : "WHERE ");
+	            statement.append("celular = ? ");
+	            parameters.add(filter.getCelular());
+	            hasConditions = true;
+	        }
+	    }
 	}
+
 	
 	private void createOrderBy(StringBuilder statement) {
-		statement.append("ORDER BY name ASC");
+		statement.append("ORDER BY nombre ASC");
 	}
 
 	@Override
 	public void create(ClienteEntity data) {
 	    final var statement = new StringBuilder();
-	    statement.append("INSERT INTO Cliente (id, name) VALUES (?, ?)");
+	    statement.append("INSERT INTO Usuarios (id, nombre, numero_documento, numero_licencia, tipo_documento, correo, celular, direccion) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 
 	    try (final var preparedStatement = getConnection().prepareStatement(statement.toString())) {
 	        preparedStatement.setObject(1, UUIDHelper.getDefault());
 	        preparedStatement.setString(2, TextHelper.getDefault(data.getNombre()));
+	        preparedStatement.setString(3, TextHelper.getDefault(data.getNumeroDocumento()));
+	        preparedStatement.setString(4, TextHelper.getDefault(data.getNumeroLicencia()));
+	        preparedStatement.setString(5, TextHelper.getDefault(data.getTipoDocumento()));
+	        preparedStatement.setString(6, TextHelper.getDefault(data.getCorreo()));
+	        preparedStatement.setString(7, TextHelper.getDefault(data.getCelular()));
+	        preparedStatement.setString(8, TextHelper.getDefault(data.getDireccion()));
 
 	        preparedStatement.executeUpdate();
 	    } catch (final SQLException exception) {
@@ -127,11 +160,16 @@ final class ClienteSqlServerDAO extends SqlDAO implements ClienteDAO {
 	@Override
 	public void update(ClienteEntity data) {
 	    final var statement = new StringBuilder();
-	    statement.append("UPDATE Cliente SET name = ? WHERE id = ?");
+	    statement.append("UPDATE Usuarios SET nombre = ?, numero_licencia = ?, tipo_documento = ?, correo = ?, celular = ?, direccion = ?  WHERE id = ?");
 
 	    try (final var preparedStatement = getConnection().prepareStatement(statement.toString())) {
 	        preparedStatement.setString(1, TextHelper.getDefault(data.getNombre()));
-	        preparedStatement.setObject(2, data.getId());
+	        preparedStatement.setString(2, TextHelper.getDefault(data.getNumeroLicencia()));
+	        preparedStatement.setString(3, TextHelper.getDefault(data.getTipoDocumento()));
+	        preparedStatement.setString(4, TextHelper.getDefault(data.getCorreo()));
+	        preparedStatement.setString(5, TextHelper.getDefault(data.getCelular()));
+	        preparedStatement.setString(6, TextHelper.getDefault(data.getDireccion()));
+	        preparedStatement.setObject(7, data.getId());
 
 	        preparedStatement.executeUpdate();
 	    } catch (final SQLException exception) {
@@ -144,7 +182,7 @@ final class ClienteSqlServerDAO extends SqlDAO implements ClienteDAO {
 	@Override
 	public void delete(UUID id) {
 	    final var statement = new StringBuilder();
-	    statement.append("DELETE FROM Cliente WHERE id = ?");
+	    statement.append("DELETE FROM Usuarios WHERE id = ?");
 
 	    try (final var preparedStatement = getConnection().prepareStatement(statement.toString())) {
 	        preparedStatement.setObject(1, id);
@@ -157,6 +195,15 @@ final class ClienteSqlServerDAO extends SqlDAO implements ClienteDAO {
 	    }
 	}
 
+	@Override
+	public ClienteEntity findByCorreo(String correo) {
+	    var clienteEntityFilter = new ClienteEntity();
+	    clienteEntityFilter.setCorreo(correo);
+	    
+	    var result = findByFilter(clienteEntityFilter);
+	    
+	    return result.isEmpty() ? null : result.get(0);
+    }
 
 }
 

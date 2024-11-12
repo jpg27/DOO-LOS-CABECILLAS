@@ -5,4 +5,5 @@ import co.com.pgvl.entity.ClienteEntity;
 
 public interface ClienteDAO extends CreateDAO<ClienteEntity>, RetrieveDAO<ClienteEntity, UUID>, UpdateDAO<ClienteEntity>, DeleteDAO<UUID> {
 
+	ClienteEntity findByCorreo(String correo);
 }

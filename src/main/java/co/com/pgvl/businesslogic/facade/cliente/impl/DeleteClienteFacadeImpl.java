@@ -13,7 +13,7 @@ public class DeleteClienteFacadeImpl implements DeleteClienteFacade {
 
 	@Override
 	public void execute(UUID data) {
-        var factory = DAOFactory.getFactory(DAOSource.SQLSERVER);
+        var factory = DAOFactory.getFactory(DAOSource.POSTGRESQL);
 
         try {
             factory.initTransaction();

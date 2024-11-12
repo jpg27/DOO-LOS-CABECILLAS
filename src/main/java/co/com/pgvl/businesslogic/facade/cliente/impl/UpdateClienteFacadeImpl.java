@@ -13,7 +13,7 @@ public class UpdateClienteFacadeImpl implements UpdateClienteFacade {
 
 	@Override
 	public void execute(ClienteDTO data) {
-        var factory = DAOFactory.getFactory(DAOSource.SQLSERVER);
+        var factory = DAOFactory.getFactory(DAOSource.POSTGRESQL);
 
         try {
             factory.initTransaction();

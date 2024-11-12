@@ -18,10 +18,9 @@ public final class SqlServerDAOFactory extends DAOFactory {
 
 	@Override
 	protected void openConnection() {
-		SqlConnectionHelper.validateIfConnectionIsOpen(connection);
-		var connectionString = "jdbc:sqlserver://ucobet-server.database.windows.net:1433;database=ucobet-db;user=ucobetdbuser;password=uc0b3tdbus3r!;encrypt=true;trustServerCertificate=true;hostNameInCertificate=*.database.windows.net;loginTimeout=30;";
-			connection = SqlConnectionHelper.openConnection(connectionString);
-		
+	    SqlConnectionHelper.validateIfConnectionIsOpen(connection);
+	    var connectionString = "jdbc:postgresql://localhost:5432/clientes?user=postgres&password=1234";
+	    connection = SqlConnectionHelper.openConnection(connectionString);
 	}
 
 	@Override

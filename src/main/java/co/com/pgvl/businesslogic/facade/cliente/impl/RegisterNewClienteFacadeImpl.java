@@ -13,7 +13,7 @@ public class RegisterNewClienteFacadeImpl implements RegisterNewClienteFacade {
 
 	@Override
 	public void execute(final ClienteDTO data) {
-		var factory = DAOFactory.getFactory(DAOSource.SQLSERVER);
+		var factory = DAOFactory.getFactory(DAOSource.POSTGRESQL);
 		
 		try {
 			factory.initTransaction();

@@ -17,7 +17,7 @@ public class FindClienteFacadeImpl implements FindClienteFacade {
 
 	@Override
 	public List<ClienteDTO> execute(final ClienteDTO data) {
-		var factory = DAOFactory.getFactory(DAOSource.SQLSERVER);
+		var factory = DAOFactory.getFactory(DAOSource.POSTGRESQL);
 		
 		try {
 			var findClienteUseCase = new FindClienteImpl(factory);
